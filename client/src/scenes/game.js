@@ -1,5 +1,7 @@
 import Card from '../helpers/card';
 import Zone from '../helpers/zone';
+import Dealer from '../helpers/dealer';
+import io from 'socket.io-client';
 
 export default class Game extends Phaser.Scene {
   constructor() {
@@ -18,17 +20,43 @@ export default class Game extends Phaser.Scene {
   create() {
     let self = this;
 
+    this.isPlayerA = false;
+    this.opponentCards = [];
+
     this.zone = new Zone(this);
     this.dropZone = this.zone.renderZone();
     this.outline = this.zone.renderOutline(this.dropZone);
+    this.dealer = new Dealer(this);
 
-    this.dealCards = () => {
-      for (let i = 0; i < 5; i++) {
-        let playerCard = new Card(this);
-        playerCard.render(475 + i * 100, 650, 'blackCardFront');
+    this.socket = io('http://localhost:3000');
+    this.socket.on('connect', function() {
+      console.log('Connected!');
+    });
+
+    this.socket.on('isPlayerA', function() {
+      self.isPlayerA = true;
+    });
+
+    this.socket.on('dealCards', function() {
+      self.dealer.dealCards();
+      self.dealText.disableInteractive();
+    });
+
+    this.socket.on('cardPlayed', function(gameObject, isPlayerA) {
+      if (isPlayerA !== self.isPlayerA) {
+        let sprite = gameObject.textureKey;
+        self.opponentCards.shift().destroy();
+        self.dropZone.data.values.cards++;
+        let card = new Card(self);
+        card
+          .render(
+            self.dropZone.x - 350 + self.dropZone.data.values.cards * 50,
+            self.dropZone.y,
+            sprite
+          )
+          .disableInteractive();
       }
-    };
-
+    });
     this.dealText = this.add
       .text(75, 350, ['DEAL CARDS'])
       .setFontSize(18)
@@ -37,7 +65,7 @@ export default class Game extends Phaser.Scene {
       .setInteractive();
 
     this.dealText.on('pointerdown', function() {
-      self.dealCards();
+      self.socket.emit('dealCards');
     });
 
     this.dealText.on('pointerover', function() {
@@ -72,6 +100,7 @@ export default class Game extends Phaser.Scene {
       gameObject.x = dropZone.x - 350 + dropZone.data.values.cards * 50;
       gameObject.y = dropZone.y;
       gameObject.disableInteractive();
+      self.socket.emit('cardPlayed', gameObject, self.isPlayerA);
     });
   }
 
