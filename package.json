@@ -1,0 +1,24 @@
+{
+  "name": "multiplayer-card-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nenadstokic/multiplayer-card-project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nenadstokic/multiplayer-card-project/issues"
+  },
+  "homepage": "https://github.com/nenadstokic/multiplayer-card-project#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.3",
+    "socket.io": "^2.3.0"
+  }
+}
